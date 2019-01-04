@@ -7,6 +7,10 @@ sim: shell.c sim.c
 	gcc -g -O2 $^ -o $@
 
 clean:
-	rm -rf *.o *~ sim
+	rm -f *.o 
+	rm -f *~ 
+	rm -f sim
+	rm -f dumpsim 
+	rm -rf *.dSYM
 
 .PHONY: clean
