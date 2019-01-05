@@ -35,3 +35,11 @@ int decode_i_rt(uint32_t instr) {
 int16_t decode_i_immediate(uint32_t instr) {
 	return (int16_t) ((instr & MASK_I_IMMEDIATE) >> SHIFT_I_IMMEDIATE); 
 }
+
+/* ----------------------------------------------------------------------------
+	J-Type Instructions 
+*/
+
+uint32_t decode_j_target(uint32_t instr) {
+	return (uint32_t) ((instr & MASK_J_TARGET) >> SHIFT_J_TARGET); 
+}

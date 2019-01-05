@@ -42,4 +42,14 @@ int decode_i_rt(uint32_t instr);
  */
 int16_t decode_i_immediate(uint32_t instr);
 
+/* ----------------------------------------------------------------------------
+	J-Type Instructions 
+*/
+
+/*
+ * decode_j_target
+ * Decode target address from J-type instruction. 
+ */
+uint32_t decode_j_target(uint32_t instr); 
+
 #endif // __DECODE_H
