@@ -1,7 +1,7 @@
-        # Basic arithmetic instructions
-        # This is a hodgepodge of arithmetic instructions to test
-        # your basic functionality.
-        # No overflow exceptions should occur
+# Basic arithmetic instructions
+# This is a hodgepodge of arithmetic instructions to test
+# your basic functionality.
+# No overflow exceptions should occur
 	.text
 main:   
         addiu   $2, $zero, 1024

@@ -3,7 +3,7 @@
 # Kyle Dotterrer
 # January, 2018 
 
-sim: shell.c sim.c
+sim: shell.c sim.c decode.c 
 	gcc -g -O2 $^ -o $@
 
 clean:

@@ -68,8 +68,7 @@ int INSTRUCTION_COUNT;
 /* Purpose: Read a 32-bit word from memory                     */
 /*                                                             */
 /***************************************************************/
-uint32_t mem_read_32(uint32_t address)
-{
+uint32_t mem_read_32(uint32_t address) {
     int i;
     for (i = 0; i < MEM_NREGIONS; i++) {
         if (address >= MEM_REGIONS[i].start &&
@@ -95,8 +94,7 @@ uint32_t mem_read_32(uint32_t address)
 /* Purpose: Write a 32-bit word to memory                      */
 /*                                                             */
 /***************************************************************/
-void mem_write_32(uint32_t address, uint32_t value)
-{
+void mem_write_32(uint32_t address, uint32_t value) {
     int i;
     for (i = 0; i < MEM_NREGIONS; i++) {
         if (address >= MEM_REGIONS[i].start &&
