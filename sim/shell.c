@@ -12,11 +12,11 @@
 /*          You should only change sim.c!                       */
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <assert.h>
 
 #include "shell.h"
 
@@ -49,14 +49,16 @@ mem_region_t MEM_REGIONS[] = {
     { MEM_KTEXT_START, MEM_KTEXT_SIZE, NULL }
 };
 
-#define MEM_NREGIONS (sizeof(MEM_REGIONS)/sizeof(mem_region_t))
+#define MEM_NREGIONS (sizeof(MEM_REGIONS) / sizeof(mem_region_t))
 
 /***************************************************************/
 /* CPU State info.                                             */
 /***************************************************************/
 
-CPU_State CURRENT_STATE, NEXT_STATE;
-int RUN_BIT;	/* run bit */
+CPU_State CURRENT_STATE; 
+CPU_State NEXT_STATE;
+
+int RUN_BIT;	
 int INSTRUCTION_COUNT;
 
 /***************************************************************/
@@ -72,6 +74,7 @@ uint32_t mem_read_32(uint32_t address)
     for (i = 0; i < MEM_NREGIONS; i++) {
         if (address >= MEM_REGIONS[i].start &&
                 address < (MEM_REGIONS[i].start + MEM_REGIONS[i].size)) {
+            
             uint32_t offset = address - MEM_REGIONS[i].start;
 
             return
@@ -98,6 +101,7 @@ void mem_write_32(uint32_t address, uint32_t value)
     for (i = 0; i < MEM_NREGIONS; i++) {
         if (address >= MEM_REGIONS[i].start &&
                 address < (MEM_REGIONS[i].start + MEM_REGIONS[i].size)) {
+            
             uint32_t offset = address - MEM_REGIONS[i].start;
 
             MEM_REGIONS[i].mem[offset+3] = (value >> 24) & 0xFF;
@@ -203,7 +207,7 @@ void mdump(FILE * dumpsim_file, int start, int stop) {
     printf("  0x%08x (%d) : 0x%08x\n", address, address, mem_read_32(address));
   printf("\n");
 
-  /* dump the memory contents into the dumpsim file */
+  // dump the memory contents into the dumpsim file 
   fprintf(dumpsim_file, "\nMemory content [0x%08x..0x%08x] :\n", start, stop);
   fprintf(dumpsim_file, "-------------------------------------\n");
   for (address = start; address <= stop; address += 4)
@@ -233,7 +237,7 @@ void rdump(FILE * dumpsim_file) {
   printf("LO: 0x%08x\n", CURRENT_STATE.LO);
   printf("\n");
 
-  /* dump the state information into the dumpsim file */
+  // dump the state information into the dumpsim file 
   fprintf(dumpsim_file, "\nCurrent register/bus values :\n");
   fprintf(dumpsim_file, "-------------------------------------\n");
   fprintf(dumpsim_file, "Instruction Count : %u\n", INSTRUCTION_COUNT);
@@ -352,18 +356,17 @@ void init_memory() {
 /*                                                            */
 /**************************************************************/
 void load_program(char *program_filename) {                   
-  FILE * prog;
+  FILE *prog;
   int ii, word;
 
-  /* Open program file. */
+  // open the program file 
   prog = fopen(program_filename, "r");
   if (prog == NULL) {
     printf("Error: Can't open program file %s\n", program_filename);
     exit(-1);
   }
 
-  /* Read in the program. */
-
+  // read in the program 
   ii = 0;
   while (fscanf(prog, "%x\n", &word) != EOF) {
     mem_write_32(MEM_TEXT_START + ii, word);
@@ -391,9 +394,9 @@ void initialize(char *program_filename, int num_prog_files) {
     load_program(program_filename);
     while(*program_filename++ != '\0');
   }
+
   NEXT_STATE = CURRENT_STATE;
-    
-  RUN_BIT = TRUE;
+  RUN_BIT    = TRUE;
 }
 
 /***************************************************************/

@@ -23,10 +23,13 @@ def main():
 
 		# pretty disgusting parse job here 
 		# appears the SPIM non-uniformly outputs data separated by tabs and spaces
-		split = (line.strip().split("\t")[1]).split(" ")
+		split  = (line.strip().split("\t")[1]).split(" ")
+
+		# now isolate the leading '0x' from hextring, wont need in simulator 
+		hexstr = (split[0].split("x"))[1]
 
 		# write the cleaned-up line to stdout 
-		sys.stdout.write(split[0])
+		sys.stdout.write(hexstr)
 		sys.stdout.write("\n")
 
 if __name__ == "__main__":
