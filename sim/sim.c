@@ -31,8 +31,15 @@ int handle_bne(uint32_t instr);
 int handle_blez(uint32_t instr);
 int handle_bgtz(uint32_t instr); 
 
-int handle_lw(uint32_t instr); 
+int handle_addi(uint32_t instr);
 int handle_addiu(uint32_t instr);
+int handle_slti(uint32_t instr);
+int handle_sltiu(uint32_t instr);
+int handle_andi(uint32_t instr);
+int handle_ori(uint32_t instr);
+
+int handle_lw(uint32_t instr); 
+
 int handle_unrecognized(uint32_t instr); 
 
 /* ----------------------------------------------------------------------------
@@ -188,6 +195,158 @@ int handle_bgtz(uint32_t instr) {
 }
 
 /*
+ * handle_addi
+ * Add Immediate 
+ * Opcode: 8
+ */
+int handle_addi(uint32_t instr) {
+	// decode source and target register 
+	int rs = decode_i_rs(instr);
+	int rt = decode_i_rt(instr);
+
+	// decode and sign-extend immediate value 
+	int32_t immediate = (int32_t) decode_i_immediate(instr);
+
+	// add contents of source register to immediate to form result
+	// store result in target register 
+	// NOTE: addi normally raises exception on overflow (and does not store in this case)
+	// however, this functionality is not implemented here (per lab specs)
+	NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + immediate;
+
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_addiu
+ * Add Immediate Unsigned 
+ * Opcode: 9
+ */
+int handle_addiu(uint32_t instr) {
+	// decode source and target registers 
+	int rs = decode_i_rs(instr);
+	int rt = decode_i_rt(instr);
+
+	// decode and sign-extend immediate value 
+	int32_t immediate = (int32_t) decode_i_immediate(instr);
+
+	// add contents of source register to immediate to form result
+	// store result in target register 
+	// NOTE: addiu never causes overflow exception
+	NEXT_STATE.REGS[rt] =  CURRENT_STATE.REGS[rs] + immediate; 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_slti
+ * Set On Less Than Immediate 
+ * Opcode: 10
+ */
+int handle_slti(uint32_t instr) {
+	// decode source and target registers 
+	int rs = decode_i_rs(instr);
+	int rt = decode_i_rt(instr);
+
+	// decode and sign-extend immediate value 
+	int32_t immediate = (int32_t) decode_i_immediate(instr);
+
+	if (((int32_t) CURRENT_STATE.REGS[rs]) < immediate) {
+		// if, considering both quantities as signed integers, 
+		// contents of source register are less than immediate, 
+		// contents of target register set to 1
+		NEXT_STATE.REGS[rt] = (uint32_t) 1;
+	} else {
+		// otherwise, set to 0 
+		NEXT_STATE.REGS[rt] = (uint32_t) 0; 
+	}
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_sltiu
+ * Set On Less Than Immediate Unsigned
+ * Opcode: 11
+ */
+int handle_sltiu(uint32_t instr) {
+	// decode source and target registers 
+	int rs = decode_i_rs(instr);
+	int rt = decode_i_rt(instr);
+
+	// decode and sign-extend immediate value 
+	int32_t immediate = (int32_t) decode_i_immediate(instr);
+
+	if (CURRENT_STATE.REGS[rs] < ((uint32_t) immediate)) {
+		// if, considering both quantities as unsigned integers, 
+		// contents of source register are less than immediate, 
+		// contents of target register set to 1
+		NEXT_STATE.REGS[rt] = (uint32_t) 1;
+	} else {
+		// otherwise, set to 0 
+		NEXT_STATE.REGS[rt] = (uint32_t) 0; 
+	}
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_andi
+ * And Immediate
+ * Opcode: 12
+ */
+int handle_andi(uint32_t instr) {
+	// decode source and target registers 
+	int rs = decode_i_rs(instr);
+	int rt = decode_i_rt(instr);
+
+	// decode and zero-extend immediate value 
+	uint32_t immediate = (uint32_t) decode_i_immediate(instr);
+
+	// contents of source register and immediate combined in bitwise AND
+	// store result in target register 
+	NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] & immediate;
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_ori
+ * Or Immediate  
+ * Opcode: 13
+ */
+int handle_ori(uint32_t instr) {
+	// decode source and target registers 
+	int rs = decode_i_rs(instr);
+	int rt = decode_i_rt(instr);
+
+	// decode and zero-extend immediate value 
+	uint32_t immediate = (uint32_t) decode_i_immediate(instr);
+
+	// contents of source register and immediate combined in bitwise OR
+	// store result in target register 
+	NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] | immediate;
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
  * handle_lw
  * Load Word
  * Opcode: 35
@@ -208,31 +367,6 @@ int handle_lw(uint32_t instr) {
 
 	// update the program counter to point to next sequential instr
 	NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
-
-	return STATUS_OK; 
-}
-
-/*
- * handle_addiu
- * Add Immediate Unsigned 
- * Opcode: 9
- */
-int handle_addiu(uint32_t instr) {
-	// decode source and target registers 
-	int rs = decode_i_rs(instr);
-	int rt = decode_i_rt(instr);
-
-	// decode and sign-extend immediate value 
-	int32_t immediate = (int32_t) decode_i_immediate(instr);
-
-	// add contents of source register to immediate to form result
-	int32_t result = CURRENT_STATE.REGS[rs] + immediate; 
-
-	// store result in target register 
-	NEXT_STATE.REGS[rt] = result;
-
-	// update the program counter to point to next sequential instr
-	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 
 	return STATUS_OK; 
 }
@@ -267,9 +401,15 @@ void init_instr_dispatch(void) {
 	INSTR_DISPATCH[OPCODE_BNE] = handle_bne; 
 	INSTR_DISPATCH[OPCODE_BLEZ] = handle_blez; 
 	INSTR_DISPATCH[OPCODE_BGTZ] = handle_bgtz;
+	INSTR_DISPATCH[OPCODE_ADDI] = handle_addi;
+	INSTR_DISPATCH[OPCODE_ADDIU] = handle_addiu;
+	INSTR_DISPATCH[OPCODE_SLTI] = handle_slti;
+	INSTR_DISPATCH[OPCODE_SLTIU] = handle_sltiu;
+	INSTR_DISPATCH[OPCODE_ANDI] = handle_andi;
+	INSTR_DISPATCH[OPCODE_ORI] = handle_ori; 
 
 	INSTR_DISPATCH[OPCODE_LW] = handle_lw; 
-	INSTR_DISPATCH[OPCODE_ADDIU] = handle_addiu; 
+	
 }
 
 
