@@ -11,6 +11,7 @@
 */
 
 #define OPCODE_LW 35
+#define OPCODE_ADDIU 9 
 
 /* ----------------------------------------------------------------------------
 	Instruction - Bit Masking Constants

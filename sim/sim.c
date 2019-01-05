@@ -25,6 +25,7 @@ int (*INSTR_DISPATCH[128])();
 */
 
 int handle_lw(uint32_t instr); 
+int handle_addiu(uint32_t instr);
 int handle_unrecognized(uint32_t instr); 
 
 /* ----------------------------------------------------------------------------
@@ -66,6 +67,26 @@ int handle_lw(uint32_t instr) {
 	return STATUS_OK; 
 }
 
+int handle_addiu(uint32_t instr) {
+	// decode source and target registers 
+	int rs = decode_i_rs(instr);
+	int rt = decode_i_rt(instr);
+
+	// decode and sign-extend immediate value 
+	int32_t immediate = (int32_t) decode_i_immediate(instr);
+
+	// add contents of source register to immediate to form result
+	int32_t result = CURRENT_STATE.REGS[rs] + immediate; 
+
+	// store result in target register 
+	NEXT_STATE.REGS[rt] = result;
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
 int handle_unrecognized(uint32_t instr) {
 	// for now, just fail silently 
 	return STATUS_ERR;
@@ -86,6 +107,7 @@ void init_instr_dispatch(void) {
 
 	// setup individual handlers for recognized instructions
 	INSTR_DISPATCH[OPCODE_LW] = handle_lw; 
+	INSTR_DISPATCH[OPCODE_ADDIU] = handle_addiu; 
 }
 
 
