@@ -7,25 +7,31 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
+#include "sim.h"
 #include "mips.h"
 #include "shell.h"
 #include "decode.h"
 
-#define STATUS_OK  0
-#define STATUS_ERR 1
+/* ----------------------------------------------------------------------------
+	Instruction Handler Dipatch
+*/
+
+int (*INSTR_DISPATCH[128])(); 
+
+/* ----------------------------------------------------------------------------
+	Local Prototypes 
+*/
 
 int handle_lw(uint32_t instr); 
+int handle_unrecognized(uint32_t instr); 
 
-int (*INSTR_DISPATCH[1])() = {
-	handle_lw
-}; 
+/* ----------------------------------------------------------------------------
+	Process Instruction
+*/
 
 void process_instruction(void) {
-    /* execute one instruction here. You should use CURRENT_STATE and modify
-     * values in NEXT_STATE. You can call mem_read_32() and mem_write_32() to
-     * access memory. */
-
 	// read the instr from memory text segment
 	uint32_t raw_instr = mem_read_32(CURRENT_STATE.PC); 
 	
@@ -33,8 +39,12 @@ void process_instruction(void) {
 	int op = decode_opcode(raw_instr);
 
 	// dispatch the appropriate instruction handler
-	(*INSTR_DISPATCH[0])(raw_instr); 
+	(*INSTR_DISPATCH[op])(raw_instr); 
 }
+
+/* ----------------------------------------------------------------------------
+	Instruction Handlers 
+*/
 
 int handle_lw(uint32_t instr) {
 	// decode base and target registers 
@@ -54,6 +64,28 @@ int handle_lw(uint32_t instr) {
 	NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
 
 	return STATUS_OK; 
+}
+
+int handle_unrecognized(uint32_t instr) {
+	// for now, just fail silently 
+	return STATUS_ERR;
+}
+
+/* ----------------------------------------------------------------------------
+	Instruction Handler Dispatch Setup 
+*/
+
+void init_instr_dispatch(void) {
+	memset(INSTR_DISPATCH, 0, sizeof(void *)*DISPATCH_SIZE);
+
+	// setup handler for unrecognized instructions
+	// prevents segmentation faults on bad opcode decodes 
+	for (int i = 0; i < DISPATCH_SIZE; i++) {
+		INSTR_DISPATCH[i] = handle_unrecognized;
+	}
+
+	// setup individual handlers for recognized instructions
+	INSTR_DISPATCH[OPCODE_LW] = handle_lw; 
 }
 
 

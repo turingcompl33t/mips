@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <assert.h>
 
+#include "sim.h"
 #include "shell.h"
 
 /***************************************************************/
@@ -413,6 +414,7 @@ int main(int argc, char *argv[]) {
   printf("MIPS Simulator\n\n");
 
   initialize(argv[1], argc - 1);
+  init_instr_dispatch(); 
 
   if ((dumpsim_file = fopen("dumpsim", "w")) == NULL) {
     printf("Error: Can't open dumpsim file\n");
