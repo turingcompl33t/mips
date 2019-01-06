@@ -58,10 +58,15 @@ int handle_bltz(uint32_t instr);
 int handle_bgez(uint32_t instr);
 
 int handle_sll(uint32_t instr); 
+int handle_srl(uint32_t instr);
+int handle_sra(uint32_t instr);
+int handle_sllv(uint32_t instr); 
 int handle_addu(uint32_t instr); 
 
 int handle_bltz(uint32_t instr); 
 int handle_bgez(uint32_t instr); 
+int handle_bltzal(uint32_t instr); 
+int handle_bgezal(uint32_t instr); 
 
 int handle_unrecognized_opcode(uint32_t instr); 
 int handle_unrecognized_function(uint32_t instr); 
@@ -680,6 +685,73 @@ int handle_sll(uint32_t instr) {
 } 
 
 /*
+ * handle_srl
+ * Shift Right Logical
+ * Function: 2
+ */
+int handle_srl(uint32_t instr) {
+	// decode target register, destination register, and shift amount
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+	int sa = decode_r_shamt(instr);
+
+	// contents of target register shifted left by sa bits
+	// store result in destination regiter
+	NEXT_STATE.REGS[rd] = (CURRENT_STATE.REGS[rt] >> sa);
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_sra
+ * Shift Right Arithmetic
+ * Function: 3
+ */
+int handle_sra(uint32_t instr) {
+	// decode target register, destination register, and shift amount
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+	int sa = decode_r_shamt(instr);
+
+	uint32_t mask   = ((~0) << (32 - sa)); 
+	uint32_t result = CURRENT_STATE.REGS[rt] >> sa; 
+
+	// bitwise OR result with sign bit of original register content
+	NEXT_STATE.REGS[rd] = result | mask;
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_sllv
+ * Shift Left Logical Variable
+ * Function: 4
+ */
+int handle_sllv(uint32_t instr) {
+	// decode source register, target register, and destination register
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// shift amount determined by low order five bits of source register 
+	int sa = (CURRENT_STATE.REGS[rs] & 0x000001F);
+
+	// store result of left shift of target register content in destination register
+	NEXT_STATE.REGS[rd] = (CURRENT_STATE.REGS[rt] << sa); 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
  * handle_addu
  * Add Unsigned 
  * Function: 33
@@ -737,6 +809,58 @@ int handle_bgez(uint32_t instr) {
 
 	// decode offset, shift left 2 bits, and sign extend
 	int32_t offset = (int32_t) (decode_i_immediate(instr) << 2);
+
+	if (CURRENT_STATE.REGS[rs] >= 0) {
+		// if contents of source register greater than or equal to zero, branch is taken
+		NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+	} else {
+		// otherwise, not taken
+		NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+	}
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_bltzal
+ * Branch On Less Than Zero And Link
+ * Target: 16
+ */
+int handle_bltzal(uint32_t instr) {
+	// decode source register 
+	int rs = decode_i_rs(instr);
+
+	// decode offset, shift left 2 bits, and sign extend
+	int32_t offset = (int32_t) (decode_i_immediate(instr) << 2);
+
+	// unconditionally, address of next instruction stored in link register 
+	NEXT_STATE.REGS[REG_LINK] = CURRENT_STATE.PC + 4;
+
+	if (CURRENT_STATE.REGS[rs] < 0) {
+		// if contents of source register less than zero, branch is taken
+		NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+	} else {
+		// otherwise, not taken
+		NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+	}
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_bgezal
+ * Branch On Greater Than Or Equal To Zero And Link
+ * Target: 17
+ */
+int handle_bgezal(uint32_t instr) {
+	// decode source register 
+	int rs = decode_i_rs(instr);
+
+	// decode offset, shift left 2 bits, and sign extend
+	int32_t offset = (int32_t) (decode_i_immediate(instr) << 2);
+
+	// unconditionally, address of next instruction stored in link register 
+	NEXT_STATE.REGS[REG_LINK] = CURRENT_STATE.PC + 4;
 
 	if (CURRENT_STATE.REGS[rs] >= 0) {
 		// if contents of source register greater than or equal to zero, branch is taken
@@ -832,6 +956,9 @@ void init_function_dispatch(void) {
 	}
 
 	FUNCTION_DISPATCH[FUNC_SLL] = handle_sll; 
+	FUNCTION_DISPATCH[FUNC_SRL] = handle_srl;
+	FUNCTION_DISPATCH[FUNC_SRA] = handle_sra;
+	FUNCTION_DISPATCH[FUNC_SLLV] = handle_sllv; 
 	FUNCTION_DISPATCH[FUNC_ADDU] = handle_addu;
 }
 
@@ -846,6 +973,8 @@ void init_target_dispatch(void) {
 
 	TARGET_DISPATCH[TARGET_BLTZ] = handle_bltz; 
 	TARGET_DISPATCH[TARGET_BGEZ] = handle_bgez;
+	TARGET_DISPATCH[TARGET_BLTZAL] = handle_bltzal;
+	TARGET_DISPATCH[TARGET_BGEZAL] = handle_bgezal;
 }
 
 

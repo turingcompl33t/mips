@@ -50,6 +50,9 @@
 */
 
 #define FUNC_SLL 0 
+#define FUNC_SRL 2
+#define FUNC_SRA 3
+#define FUNC_SLLV 4
 #define FUNC_ADDU 33
 
 /* ----------------------------------------------------------------------------
@@ -58,6 +61,8 @@
 
 #define TARGET_BLTZ 0
 #define TARGET_BGEZ 1
+#define TARGET_BLTZAL 16
+#define TARGET_BGEZAL 17
 
 /* ----------------------------------------------------------------------------
 	Instruction - Bit Masking Constants
