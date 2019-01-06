@@ -418,6 +418,7 @@ int main(int argc, char *argv[]) {
   // initialize opcode and function dispatchers
   init_opcode_dispatch(); 
   init_function_dispatch();
+  init_target_dispatch(); 
 
   if ((dumpsim_file = fopen("dumpsim", "w")) == NULL) {
     printf("Error: Can't open dumpsim file\n");

@@ -17,5 +17,6 @@
 
 void init_opcode_dispatch   (void);
 void init_function_dispatch (void);
+void init_target_dispatch   (void);
 
 #endif // __SIM_H

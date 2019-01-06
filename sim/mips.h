@@ -20,7 +20,7 @@
 */
 
 #define OPCODE_SPECIAL 0
-
+#define OPCODE_REGIMM 1
 #define OPCODE_J   2
 #define OPCODE_JAL 3
 #define OPCODE_BEQ 4
@@ -39,6 +39,11 @@
 #define OPCODE_LH 33
 #define OPCODE_LW 35
 #define OPCODE_LBU 36
+#define OPCODE_LHU 37
+
+#define OPCODE_SB 40
+#define OPCODE_SH 41
+#define OPCODE_SW 43
 
 /* ----------------------------------------------------------------------------
 	Instruction Function Codes  
@@ -46,6 +51,13 @@
 
 #define FUNC_SLL 0 
 #define FUNC_ADDU 33
+
+/* ----------------------------------------------------------------------------
+	Instruction Target Codes
+*/
+
+#define TARGET_BLTZ 0
+#define TARGET_BGEZ 1
 
 /* ----------------------------------------------------------------------------
 	Instruction - Bit Masking Constants
