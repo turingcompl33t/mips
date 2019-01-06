@@ -1,5 +1,6 @@
 /*
  * decode.h
+ * Instruction decode helpers.
  *
  * Kyle Dotterrer
  * January, 2019 
@@ -11,7 +12,7 @@
 #include <stdint.h>
 
 /* ----------------------------------------------------------------------------
-	Opcode 
+	Opcode (All Instruction Types)
 */
 
 /*
@@ -50,6 +51,40 @@ int16_t decode_i_immediate(uint32_t instr);
  * decode_j_target
  * Decode target address from J-type instruction. 
  */
-uint32_t decode_j_target(uint32_t instr); 
+uint32_t decode_j_target(uint32_t instr);
+
+/* ----------------------------------------------------------------------------
+	R-Type Instructions 
+*/
+
+/*
+ * decode_r_rs
+ * Decode source register from R-type instruction. 
+ */
+int decode_r_rs(uint32_t instr);
+
+/*
+ * decode_r_rt
+ * Decode target register from R-type instruction. 
+ */
+int decode_r_rt(uint32_t instr);
+
+/*
+ * decode_r_rd
+ * Decode destination register from R-type instruction. 
+ */
+int decode_r_rd(uint32_t instr);
+
+/*
+ * decode_r_shamt
+ * Decode shift amount from R-type instruction. 
+ */
+int decode_r_shamt(uint32_t instr);
+
+/*
+ * decode_r_funct
+ * Decode function code from R-type instruction. 
+ */
+int decode_r_funct(uint32_t instr);
 
 #endif // __DECODE_H

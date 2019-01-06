@@ -1,4 +1,4 @@
-        # Basic branch test
+# Basic branch test
 	.text
 
 main:

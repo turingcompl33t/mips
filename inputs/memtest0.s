@@ -1,7 +1,7 @@
-        # Basic LW/SW test
+# Basic LW/SW test
 	.text
 main:
-        #;;  Set a base address
+        #  Set a base address
         lui    $3, 0x1000
 
         addiu  $5, $zero, 255
@@ -9,7 +9,7 @@ main:
         add    $7, $6, $6
         addiu  $8, $7, 30000
         
-        #;; Place a test pattern in memory
+        # Place a test pattern in memory
         sw     $5, 0($3)
         sw     $6, 4($3)
         sw     $7, 8($3)
@@ -31,7 +31,7 @@ main:
         lw     $15,  4($3)
         lw     $16,  8($3)
                
-        #;; Calculate a "checksum" for easy comparison
+        # Calculate a "checksum" for easy comparison
         add    $17, $zero, $9
         add    $17, $17, $10
         add    $17, $17, $11
@@ -41,7 +41,7 @@ main:
         add    $17, $17, $15
         add    $17, $17, $16
         
-        #;;  Quit out 
+        #  Quit out 
         addiu $v0, $zero, 0xa
         syscall
         

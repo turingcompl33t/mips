@@ -18,7 +18,11 @@
 	Instruction Handler Dipatch
 */
 
-int (*INSTR_DISPATCH[128])(); 
+// function table, keyed by instruction opcode field
+int (*OPCODE_DISPATCH[DISPATCH_SIZE])(); 
+	
+// function table, keyed by instruction function field
+int (*FUNCTION_DISPATCH[DISPATCH_SIZE])();
 
 /* ----------------------------------------------------------------------------
 	Local Prototypes 
@@ -30,17 +34,25 @@ int handle_beq(uint32_t instr);
 int handle_bne(uint32_t instr);
 int handle_blez(uint32_t instr);
 int handle_bgtz(uint32_t instr); 
-
 int handle_addi(uint32_t instr);
 int handle_addiu(uint32_t instr);
 int handle_slti(uint32_t instr);
 int handle_sltiu(uint32_t instr);
 int handle_andi(uint32_t instr);
 int handle_ori(uint32_t instr);
-
+int handle_xori(uint32_t instr);
+int handle_lui(uint32_t instr);
+int handle_lb(uint32_t instr);
+int handle_lh(uint32_t instr);
+int handle_lw(uint32_t instr);
+int handle_lbu(uint32_t instr);
 int handle_lw(uint32_t instr); 
 
-int handle_unrecognized(uint32_t instr); 
+int handle_sll(uint32_t instr); 
+int handle_addu(uint32_t instr); 
+
+int handle_unrecognized_opcode(uint32_t instr); 
+int handle_unrecognized_function(uint32_t instr); 
 
 /* ----------------------------------------------------------------------------
 	Process Instruction
@@ -53,12 +65,19 @@ void process_instruction(void) {
 	// decode the opcode 
 	int op = decode_opcode(raw_instr);
 
-	// dispatch the appropriate instruction handler
-	(*INSTR_DISPATCH[op])(raw_instr); 
+	if (op == OPCODE_SPECIAL) {
+		// for special instructions, decode the function value from instruction
+		int func = decode_r_funct(raw_instr);
+		// dispatch the appropriate instruction handler based on function
+		(*FUNCTION_DISPATCH[func])(raw_instr);
+	} else {
+		// otherwise, dispatch the appropriate instruction handler based on opcode 
+		(*OPCODE_DISPATCH[op])(raw_instr); 
+	}
 }
 
 /* ----------------------------------------------------------------------------
-	Instruction Handlers 
+	Instruction Handlers, by Opcode 
 */
 
 /*
@@ -302,7 +321,7 @@ int handle_sltiu(uint32_t instr) {
 
 /*
  * handle_andi
- * And Immediate
+ * AND Immediate
  * Opcode: 12
  */
 int handle_andi(uint32_t instr) {
@@ -325,7 +344,7 @@ int handle_andi(uint32_t instr) {
 
 /*
  * handle_ori
- * Or Immediate  
+ * OR Immediate  
  * Opcode: 13
  */
 int handle_ori(uint32_t instr) {
@@ -339,6 +358,107 @@ int handle_ori(uint32_t instr) {
 	// contents of source register and immediate combined in bitwise OR
 	// store result in target register 
 	NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] | immediate;
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_xori
+ * Exclusive OR Immediate  
+ * Opcode: 14
+ */
+int handle_xori(uint32_t instr) {
+	// decode source and target registers 
+	int rs = decode_i_rs(instr);
+	int rt = decode_i_rt(instr);
+
+	// decode and zero-extend immediate value 
+	uint32_t immediate = (uint32_t) decode_i_immediate(instr);
+
+	// contents of source register and immediate combined in bitwise XOR
+	// store result in target register 
+	NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] ^ immediate;
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_lui
+ * Load Upper Immediate 
+ * Opcode: 13
+ */
+int handle_lui(uint32_t instr) {
+	// decode target register 
+	int rt = decode_i_rt(instr);
+
+	// decode immediate, left shift 16 bits 
+	// likely don't need bitwise AND operation, but its insurance 
+	int32_t immediate = (int32_t) ((decode_i_immediate(instr) << 16) & 0xFFFF0000); 
+
+	// store immediate in target register 
+	NEXT_STATE.REGS[rt] = immediate; 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_lb
+ * Load Byte
+ * Opcode: 32
+ */
+int handle_lb(uint32_t instr) {
+	// decode base and target registers 
+	int base = decode_i_rs(instr);
+	int rt   = decode_i_rt(instr);
+
+	// decode and sign extend offset  
+	int32_t offset = (int32_t) decode_i_immediate(instr);
+
+	// combine contents of base register and offset to form virtual address
+	uint32_t address = CURRENT_STATE.REGS[base] + offset;
+
+	// load 32 bit word at address, mask off all but low byte 
+	int8_t byte = (int8_t) (mem_read_32(address) & 0x000000FF); 
+
+	// store sign-extended result in target register 
+	NEXT_STATE.REGS[rt] = (int32_t) byte; 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_lh
+ * Load Halfword
+ * Opcode: 33
+ */
+int handle_lh(uint32_t instr) {
+	// decode base and target registers 
+	int base = decode_i_rs(instr);
+	int rt   = decode_i_rt(instr);
+
+	// decode and sign extend offset  
+	int32_t offset = (int32_t) decode_i_immediate(instr);
+
+	// combine contents of base register and offset to form virtual address
+	uint32_t address = CURRENT_STATE.REGS[base] + offset;
+
+	// load 32 bit word at address, mask off all but low halfword
+	int16_t halfword = (int16_t) (mem_read_32(address) & 0x0000FFFF);
+
+	// store sign-extended result in target register 
+	NEXT_STATE.REGS[rt] = (int32_t) halfword; 
 
 	// update the program counter to point to next sequential instr
 	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
@@ -372,12 +492,99 @@ int handle_lw(uint32_t instr) {
 }
 
 /*
- * handle_unrecognized 
- * Unrecognized Instruction
+ * handle_lbu
+ * Load Byte Unsigned
+ * Opcode: 36
+ */
+int handle_lbu(uint32_t instr) {
+	// decode base and target registers 
+	int base = decode_i_rs(instr);
+	int rt   = decode_i_rt(instr);
+
+	// decode and sign extend offset  
+	int32_t offset = (int32_t) decode_i_immediate(instr);
+
+	// combine contents of base register and offset to form virtual address
+	uint32_t address = CURRENT_STATE.REGS[base] + offset;
+
+	// load 32 bit word at address, mask off all but low byte 
+	uint8_t byte = (uint8_t) (mem_read_32(address) & 0x000000FF); 
+
+	// store zero-extended result in target register 
+	NEXT_STATE.REGS[rt] = (uint32_t) byte; 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
+
+	return STATUS_OK; 
+}
+
+/* ----------------------------------------------------------------------------
+	Instruction Handlers, by Function
+*/
+
+/*
+ * handle_sll
+ * Shift Left Logical
+ * Function: 0
+ */
+int handle_sll(uint32_t instr) {
+	// decode target register, destination register, and shift amount
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+	int sa = decode_r_shamt(instr);
+
+	// contents of target register shifted left by sa bits
+	// store result in destination regiter
+	NEXT_STATE.REGS[rd] = (CURRENT_STATE.REGS[rt] << sa); 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+} 
+
+/*
+ * handle_addu
+ * Add Unsigned 
+ * Function: 33
+ */
+int handle_addu(uint32_t instr) {
+	// decode source, target, and destination registers
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// contents of source and target registers added to form result 
+	// no overflow exception occurs under any circumtances 
+	NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
+
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/* ----------------------------------------------------------------------------
+	Unrecognized Instruction Handlers (Opcode and Function)
+*/
+
+/*
+ * handle_unrecognized_opcode
+ * Unrecognized Instruction Opcode
  * Opcode: any undefined opcode 
  */
-int handle_unrecognized(uint32_t instr) {
-	// for now, just fail silently 
+int handle_unrecognized_opcode(uint32_t instr) {
+	fprintf(stderr, "ERROR: unrecognzied opcode\n");
+	return STATUS_ERR;
+}
+
+/*
+ * handle_unrecognized_function
+ * Unrecognized Instruction Function
+ * Opcode: any undefined function 
+ */
+int handle_unrecognized_function(uint32_t instr) {
+	fprintf(stderr, "ERROR: unrecognzied function\n");
 	return STATUS_ERR;
 }
 
@@ -385,31 +592,49 @@ int handle_unrecognized(uint32_t instr) {
 	Instruction Handler Dispatch Setup 
 */
 
-void init_instr_dispatch(void) {
-	memset(INSTR_DISPATCH, 0, sizeof(void *)*DISPATCH_SIZE);
+void init_opcode_dispatch(void) {
+	memset(OPCODE_DISPATCH, 0, sizeof(void *)*DISPATCH_SIZE);
 
 	// setup handler for unrecognized instructions
 	// prevents segmentation faults on bad opcode decodes 
 	for (int i = 0; i < DISPATCH_SIZE; i++) {
-		INSTR_DISPATCH[i] = handle_unrecognized;
+		OPCODE_DISPATCH[i] = handle_unrecognized_opcode;
 	}
 
 	// setup individual handlers for recognized instructions
-	INSTR_DISPATCH[OPCODE_J] = handle_j; 
-	INSTR_DISPATCH[OPCODE_JAL] = handle_jal; 
-	INSTR_DISPATCH[OPCODE_BEQ] = handle_beq; 
-	INSTR_DISPATCH[OPCODE_BNE] = handle_bne; 
-	INSTR_DISPATCH[OPCODE_BLEZ] = handle_blez; 
-	INSTR_DISPATCH[OPCODE_BGTZ] = handle_bgtz;
-	INSTR_DISPATCH[OPCODE_ADDI] = handle_addi;
-	INSTR_DISPATCH[OPCODE_ADDIU] = handle_addiu;
-	INSTR_DISPATCH[OPCODE_SLTI] = handle_slti;
-	INSTR_DISPATCH[OPCODE_SLTIU] = handle_sltiu;
-	INSTR_DISPATCH[OPCODE_ANDI] = handle_andi;
-	INSTR_DISPATCH[OPCODE_ORI] = handle_ori; 
+	OPCODE_DISPATCH[OPCODE_J] = handle_j; 
+	OPCODE_DISPATCH[OPCODE_JAL] = handle_jal; 
+	OPCODE_DISPATCH[OPCODE_BEQ] = handle_beq; 
+	OPCODE_DISPATCH[OPCODE_BNE] = handle_bne; 
+	OPCODE_DISPATCH[OPCODE_BLEZ] = handle_blez; 
+	OPCODE_DISPATCH[OPCODE_BGTZ] = handle_bgtz;
+	OPCODE_DISPATCH[OPCODE_ADDI] = handle_addi;
+	OPCODE_DISPATCH[OPCODE_ADDIU] = handle_addiu;
+	OPCODE_DISPATCH[OPCODE_SLTI] = handle_slti;
+	OPCODE_DISPATCH[OPCODE_SLTIU] = handle_sltiu;
+	OPCODE_DISPATCH[OPCODE_ANDI] = handle_andi;
+	OPCODE_DISPATCH[OPCODE_ORI] = handle_ori; 
 
-	INSTR_DISPATCH[OPCODE_LW] = handle_lw; 
-	
+	OPCODE_DISPATCH[OPCODE_XORI] = handle_xori;
+	OPCODE_DISPATCH[OPCODE_LUI] = handle_lui;
+	OPCODE_DISPATCH[OPCODE_LB] = handle_lb;
+	OPCODE_DISPATCH[OPCODE_LH] = handle_lh;
+	OPCODE_DISPATCH[OPCODE_LW] = handle_lw;
+	OPCODE_DISPATCH[OPCODE_LBU] = handle_lbu; 
+	OPCODE_DISPATCH[OPCODE_LW] = handle_lw; 
+}
+
+void init_function_dispatch(void) {
+	memset(FUNCTION_DISPATCH, 0, sizeof(void *)*DISPATCH_SIZE);
+
+	// setup handler for unrecognized instructions
+	// prevents segmentation faults on bad function decodes 
+	for (int i = 0; i < DISPATCH_SIZE; i++) {
+		FUNCTION_DISPATCH[i] = handle_unrecognized_function;
+	}
+
+	FUNCTION_DISPATCH[FUNC_SLL] = handle_sll; 
+	FUNCTION_DISPATCH[FUNC_ADDU] = handle_addu;
 }
 
 

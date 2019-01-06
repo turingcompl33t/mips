@@ -12,9 +12,10 @@
 #define STATUS_ERR 1
 
 // static size of instruction handler dispatch
-// (opcode field is 6 bits, 2^6 = 128)
+// opcode and function field sizes are both 6 bits
 #define DISPATCH_SIZE 128
 
-void init_instr_dispatch(void);
+void init_opcode_dispatch   (void);
+void init_function_dispatch (void);
 
 #endif // __SIM_H

@@ -1,5 +1,6 @@
 /*
  * decode.c
+ * Instruction decode helpers.
  *
  * Kyle Dotterrer
  * January, 2019 
@@ -11,7 +12,7 @@
 #include "mips.h"
 
 /* ----------------------------------------------------------------------------
-	Opcode 
+	Opcode (All Instruction Types)
 */
 
 int decode_opcode(uint32_t instr) {
@@ -42,4 +43,28 @@ int16_t decode_i_immediate(uint32_t instr) {
 
 uint32_t decode_j_target(uint32_t instr) {
 	return (uint32_t) ((instr & MASK_J_TARGET) >> SHIFT_J_TARGET); 
+}
+
+/* ----------------------------------------------------------------------------
+	R-Type Instructions 
+*/
+
+int decode_r_rs(uint32_t instr) {
+	return (int) ((instr & MASK_R_RS) >> SHIFT_R_RS);
+}
+
+int decode_r_rt(uint32_t instr) {
+	return (int) ((instr & MASK_R_RT) >> SHIFT_R_RT);
+}
+
+int decode_r_rd(uint32_t instr) {
+	return (int) ((instr & MASK_R_RD) >> SHIFT_R_RD);
+}
+
+int decode_r_shamt(uint32_t instr) {
+	return (int) ((instr & MASK_R_SHAMT) >> SHIFT_R_SHAMT); 
+}
+
+int decode_r_funct(uint32_t instr) {
+	return (int) ((instr & MASK_R_FUNCT) >> SHIFT_R_FUNCT); 
 }
