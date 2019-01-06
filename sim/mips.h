@@ -59,6 +59,12 @@
 #define FUNC_JALR 9
 #define FUNC_ADD 32
 #define FUNC_ADDU 33
+#define FUNC_SUB 34
+#define FUNC_SUBU 35
+#define FUNC_AND 36
+#define FUNC_OR 37
+#define FUNC_XOR 38
+#define FUNC_NOR 39
 
 /* ----------------------------------------------------------------------------
 	Instruction Target Codes

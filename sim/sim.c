@@ -66,7 +66,13 @@ int handle_srav(uint32_t instr);
 int handle_jr(uint32_t instr);
 int handle_jalr(uint32_t instr);
 int handle_add(uint32_t instr);
-int handle_addu(uint32_t instr); 
+int handle_addu(uint32_t instr);
+int handle_sub(uint32_t instr);
+int handle_subu(uint32_t instr);
+int handle_and(uint32_t instr);
+int handle_or(uint32_t instr);
+int handle_xor(uint32_t instr);
+int handle_nor(uint32_t instr);
 
 int handle_bltz(uint32_t instr); 
 int handle_bgez(uint32_t instr); 
@@ -888,6 +894,137 @@ int handle_addu(uint32_t instr) {
 	return STATUS_OK; 
 }
 
+/*
+ * handle_sub
+ * Subtract
+ * Function: 34
+ */
+int handle_sub(uint32_t instr) {
+	// decode source, target, and destination registers
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	int32_t source = (int32_t) CURRENT_STATE.REGS[rs];
+	int32_t target = (int32_t) CURRENT_STATE.REGS[rt];
+
+	// contents of target subtracted from contents of soucre to form result  
+	NEXT_STATE.REGS[rd] = source - target;
+
+	// update the program counter to point to next sequential instr 
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_subu
+ * Subtract Unsigned 
+ * Function: 35
+ */
+int handle_subu(uint32_t instr) {
+	// decode source, target, and destination registers
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	int32_t source = (int32_t) CURRENT_STATE.REGS[rs];
+	int32_t target = (int32_t) CURRENT_STATE.REGS[rt];
+
+	// contents of target subtracted from contents of soucre to form result  
+	// no overflow exception occurs under any circumtances 
+	NEXT_STATE.REGS[rd] = source - target;
+
+	// update the program counter to point to next sequential instr 
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_subu
+ * And
+ * Function: 35
+ */
+int handle_and(uint32_t instr) {
+	// decode source, target, and destination registers
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// contents of source register and target register combined in bitwise logical AND 
+	// result stored in destination register 
+	NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] & CURRENT_STATE.REGS[rt];
+
+	// update the program counter to point to next sequential instr 
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_or
+ * Or
+ * Function: 37
+ */
+int handle_or(uint32_t instr) {
+	// decode source, target, and destination registers
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// contents of source register and target register combined in bitwise logical OR 
+	// result stored in destination register 
+	NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt];
+
+	// update the program counter to point to next sequential instr 
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_xor
+ * Exclusive Or
+ * Function: 38
+ */
+int handle_xor(uint32_t instr) {
+	// decode source, target, and destination registers
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// contents of source register and target register combined in bitwise logical XOR 
+	// result stored in destination register 
+	NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] ^ CURRENT_STATE.REGS[rt];
+
+	// update the program counter to point to next sequential instr 
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_nor
+ * Nor 
+ * Function: 35
+ */
+int handle_nor(uint32_t instr) {
+	// decode source, target, and destination registers
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// contents of source register and target register combined in bitwise logical NOR 
+	// result stored in destination register 
+	NEXT_STATE.REGS[rd] = ~(CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt]);
+
+	// update the program counter to point to next sequential instr 
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
 /* ----------------------------------------------------------------------------
 	Instruction Handlers, by Target (Register-Immediate Instructions)
 */
@@ -1082,6 +1219,12 @@ void init_function_dispatch(void) {
 	FUNCTION_DISPATCH[FUNC_JALR] = handle_jalr;
 	FUNCTION_DISPATCH[FUNC_ADD] = handle_add; 
 	FUNCTION_DISPATCH[FUNC_ADDU] = handle_addu;
+	FUNCTION_DISPATCH[FUNC_SUB] = handle_sub;
+	FUNCTION_DISPATCH[FUNC_SUBU] = handle_subu;
+	FUNCTION_DISPATCH[FUNC_AND] = handle_and;
+	FUNCTION_DISPATCH[FUNC_OR] = handle_or; 
+	FUNCTION_DISPATCH[FUNC_XOR] = handle_xor;
+	FUNCTION_DISPATCH[FUNC_NOR] = handle_nor; 
 }
 
 void init_target_dispatch(void) {
