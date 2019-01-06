@@ -721,7 +721,7 @@ int handle_sra(uint32_t instr) {
 	int rd = decode_r_rd(instr);
 	int sa = decode_r_shamt(instr);
 
-	uint32_t mask   = ((~0) << (32 - sa)); 
+	uint32_t mask   = ( (~((int32_t) 0)) << (32 - sa) ); 
 	uint32_t result = CURRENT_STATE.REGS[rt] >> sa; 
 
 	// bitwise OR result with sign bit of original register content
@@ -793,7 +793,7 @@ int handle_srav(uint32_t instr) {
 	// shift amount determined by low order five bits of source register 
 	int sa = (CURRENT_STATE.REGS[rs] & 0x000001F);
 
-	uint32_t mask   = ((~0) << (32 - sa)); 
+	uint32_t mask   = ( (~((int32_t) 0)) << (32 - sa) ); 
 	uint32_t result = CURRENT_STATE.REGS[rt] >> sa; 
 
 	// bitwise OR result with sign bit of original register content
@@ -852,8 +852,11 @@ int handle_add(uint32_t instr) {
 	int rt = decode_r_rt(instr);
 	int rd = decode_r_rd(instr);
 
+	int32_t source = (int32_t) CURRENT_STATE.REGS[rs];
+	int32_t target = (int32_t) CURRENT_STATE.REGS[rt];
+
 	// contents of source and target registers added to form result 
-	NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
+	NEXT_STATE.REGS[rd] = source + target; 
 
 	// update the program counter to point to next sequential instr
 	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
@@ -872,9 +875,12 @@ int handle_addu(uint32_t instr) {
 	int rt = decode_r_rt(instr);
 	int rd = decode_r_rd(instr);
 
+	int32_t source = (int32_t) CURRENT_STATE.REGS[rs];
+	int32_t target = (int32_t) CURRENT_STATE.REGS[rt];
+
 	// contents of source and target registers added to form result 
 	// no overflow exception occurs under any circumtances 
-	NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
+	NEXT_STATE.REGS[rd] = source + target; 
 
 	// update the program counter to point to next sequential instr 
 	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
