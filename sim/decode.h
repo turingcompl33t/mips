@@ -53,6 +53,12 @@ int16_t decode_i_immediate(uint32_t instr);
  */
 uint32_t decode_j_target(uint32_t instr);
 
+/*
+ * decode_j_funct
+ * Decode function code from J-type instruction. 
+ */
+int decode_j_funct(uint32_t instr);
+
 /* ----------------------------------------------------------------------------
 	R-Type Instructions 
 */

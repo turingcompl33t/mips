@@ -61,6 +61,11 @@ int handle_sll(uint32_t instr);
 int handle_srl(uint32_t instr);
 int handle_sra(uint32_t instr);
 int handle_sllv(uint32_t instr); 
+int handle_srlv(uint32_t instr);
+int handle_srav(uint32_t instr);
+int handle_jr(uint32_t instr);
+int handle_jalr(uint32_t instr);
+int handle_add(uint32_t instr);
 int handle_addu(uint32_t instr); 
 
 int handle_bltz(uint32_t instr); 
@@ -752,6 +757,111 @@ int handle_sllv(uint32_t instr) {
 }
 
 /*
+ * handle_srlv
+ * Shift Right Logical Variable
+ * Function: 6
+ */
+int handle_srlv(uint32_t instr) {
+	// decode source register, target register, and destination register
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// shift amount determined by low order five bits of source register 
+	int sa = (CURRENT_STATE.REGS[rs] & 0x000001F);
+
+	// store result of left shift of target register content in destination register
+	NEXT_STATE.REGS[rd] = (CURRENT_STATE.REGS[rt] >> sa); 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_srav
+ * Shift Right Arithmetic Variable
+ * Function: 7
+ */
+int handle_srav(uint32_t instr) {
+	// decode source register, target register, and destination register
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// shift amount determined by low order five bits of source register 
+	int sa = (CURRENT_STATE.REGS[rs] & 0x000001F);
+
+	uint32_t mask   = ((~0) << (32 - sa)); 
+	uint32_t result = CURRENT_STATE.REGS[rt] >> sa; 
+
+	// bitwise OR result with sign bit of original register content
+	NEXT_STATE.REGS[rd] = result | mask;
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_jr
+ * Jump Register 
+ * Function: 8
+ */
+int handle_jr(uint32_t instr) {
+	// decode source register 
+	int rs = decode_r_rs(instr);
+
+	// unconditionally jump to address stored in source register 
+	NEXT_STATE.PC = CURRENT_STATE.REGS[rs]; 
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_jalr
+ * Jump And Link Register 
+ * Function: 9
+ */
+int handle_jalr(uint32_t instr) {
+	// decode source register and destination register 
+	int rs = decode_r_rs(instr);
+	int rd = decode_r_rd(instr);
+
+	// address of next sequential instruction stored in destination register 
+	// NOTE: specs say the destination register may be ommitted by the assembler (why?)
+	// and that, if this is the case, the link register (r31) is default 
+	NEXT_STATE.REGS[rd] = CURRENT_STATE.PC + 4;
+
+	// unconditionally jump to address stored in source register 
+	NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
+
+	return STATUS_OK;  
+}
+
+/*
+ * handle_add
+ * Add 
+ * Function: 32
+ */
+int handle_add(uint32_t instr) {
+	// decode source, target, and destination registers
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// contents of source and target registers added to form result 
+	NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
  * handle_addu
  * Add Unsigned 
  * Function: 33
@@ -766,6 +876,7 @@ int handle_addu(uint32_t instr) {
 	// no overflow exception occurs under any circumtances 
 	NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
 
+	// update the program counter to point to next sequential instr 
 	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 
 	return STATUS_OK; 
@@ -959,6 +1070,11 @@ void init_function_dispatch(void) {
 	FUNCTION_DISPATCH[FUNC_SRL] = handle_srl;
 	FUNCTION_DISPATCH[FUNC_SRA] = handle_sra;
 	FUNCTION_DISPATCH[FUNC_SLLV] = handle_sllv; 
+	FUNCTION_DISPATCH[FUNC_SRLV] = handle_srlv;
+	FUNCTION_DISPATCH[FUNC_SRAV] = handle_srav;
+	FUNCTION_DISPATCH[FUNC_JR] = handle_jr;
+	FUNCTION_DISPATCH[FUNC_JALR] = handle_jalr;
+	FUNCTION_DISPATCH[FUNC_ADD] = handle_add; 
 	FUNCTION_DISPATCH[FUNC_ADDU] = handle_addu;
 }
 

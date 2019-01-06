@@ -45,6 +45,10 @@ uint32_t decode_j_target(uint32_t instr) {
 	return (uint32_t) ((instr & MASK_J_TARGET) >> SHIFT_J_TARGET); 
 }
 
+int decode_j_funct(uint32_t instr) {
+	return (int) ((instr & MASK_J_FUNCT) >> SHIFT_J_FUNCT);
+}
+
 /* ----------------------------------------------------------------------------
 	R-Type Instructions 
 */

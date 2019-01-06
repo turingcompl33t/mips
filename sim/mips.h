@@ -53,6 +53,11 @@
 #define FUNC_SRL 2
 #define FUNC_SRA 3
 #define FUNC_SLLV 4
+#define FUNC_SRLV 6
+#define FUNC_SRAV 7
+#define FUNC_JR 8
+#define FUNC_JALR 9
+#define FUNC_ADD 32
 #define FUNC_ADDU 33
 
 /* ----------------------------------------------------------------------------
@@ -77,6 +82,7 @@
 #define MASK_I_IMMEDIATE  0x0000FFFF
 
 #define MASK_J_TARGET 0x03FFFFFF
+#define MASK_J_FUNCT  0x0000003F
 
 #define MASK_R_RS    0x03E00000
 #define MASK_R_RT    0x001F0000
@@ -95,6 +101,7 @@
 #define SHIFT_I_IMMEDIATE  0
 
 #define SHIFT_J_TARGET 0 
+#define SHIFT_J_FUNCT  0
 
 #define SHIFT_R_RS    21
 #define SHIFT_R_RT    16
