@@ -13,6 +13,7 @@
 
 /* ----------------------------------------------------------------------------
 	Opcode (All Instruction Types)
+	See module header file (decode.h) for detailed function comments. 
 */
 
 int decode_opcode(uint32_t instr) {
@@ -22,6 +23,7 @@ int decode_opcode(uint32_t instr) {
 
 /* ----------------------------------------------------------------------------
 	I-Type Instructions 
+	See module header file (decode.h) for detailed function comments. 
 */
 
 int decode_i_rs(uint32_t instr) {
@@ -39,6 +41,7 @@ int16_t decode_i_immediate(uint32_t instr) {
 
 /* ----------------------------------------------------------------------------
 	J-Type Instructions 
+	See module header file (decode.h) for detailed function comments. 
 */
 
 uint32_t decode_j_target(uint32_t instr) {
@@ -51,6 +54,7 @@ int decode_j_funct(uint32_t instr) {
 
 /* ----------------------------------------------------------------------------
 	R-Type Instructions 
+	See module header file (decode.h) for detailed function comments. 
 */
 
 int decode_r_rs(uint32_t instr) {

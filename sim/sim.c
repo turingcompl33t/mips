@@ -1,5 +1,6 @@
 /*
  * sim.c
+ * MIPS ISA simulator instruction implementation. 
  *
  * Kyle Dotterrer
  * January, 2019 
@@ -31,6 +32,7 @@ int (*OPCODE_DISPATCH[DISPATCH_SIZE])();
 	Local Prototypes 
 */
 
+// by opcode 
 int handle_j(uint32_t instr); 
 int handle_jal(uint32_t instr); 
 int handle_beq(uint32_t instr);
@@ -54,9 +56,10 @@ int handle_lhu(uint32_t instr);
 int handle_sb(uint32_t instr);
 int handle_sh(uint32_t instr);
 int handle_sw(uint32_t instr);
+
+// by function code 
 int handle_bltz(uint32_t instr);
 int handle_bgez(uint32_t instr);
-
 int handle_sll(uint32_t instr); 
 int handle_srl(uint32_t instr);
 int handle_sra(uint32_t instr);
@@ -65,9 +68,7 @@ int handle_srlv(uint32_t instr);
 int handle_srav(uint32_t instr);
 int handle_jr(uint32_t instr);
 int handle_jalr(uint32_t instr);
-
 int handle_syscall(uint32_t instr);
-
 int handle_mfhi(uint32_t instr);
 int handle_mthi(uint32_t instr);
 int handle_mflo(uint32_t instr);
@@ -76,7 +77,6 @@ int handle_mult(uint32_t instr);
 int handle_multu(uint32_t instr);
 int handle_div(uint32_t instr);
 int handle_divu(uint32_t instr); 
-
 int handle_add(uint32_t instr);
 int handle_addu(uint32_t instr);
 int handle_sub(uint32_t instr);
@@ -86,19 +86,21 @@ int handle_or(uint32_t instr);
 int handle_xor(uint32_t instr);
 int handle_nor(uint32_t instr);
 int handle_slt(uint32_t instr);
-int handle_sltu(uint32_t instr); 
+int handle_sltu(uint32_t instr);
 
+// by target code 
 int handle_bltz(uint32_t instr); 
 int handle_bgez(uint32_t instr); 
 int handle_bltzal(uint32_t instr); 
 int handle_bgezal(uint32_t instr); 
 
+// unrecognized codes 
 int handle_unrecognized_opcode(uint32_t instr); 
 int handle_unrecognized_function(uint32_t instr); 
 int handle_unrecognized_target(uint32_t instr); 
 
 /* ----------------------------------------------------------------------------
-	Process Instruction
+	Process Instruction (Entry Point)
 */
 
 void process_instruction(void) {
@@ -1162,9 +1164,9 @@ int handle_subu(uint32_t instr) {
 }
 
 /*
- * handle_subu
+ * handle_and
  * And
- * Function: 35
+ * Function: 36
  */
 int handle_and(uint32_t instr) {
 	// decode source, target, and destination registers

@@ -1,5 +1,6 @@
 /*
  * sim.h
+ * MIPS ISA simulator instruction implementation. 
  *
  * Kyle Dotterrer
  * January, 2018
