@@ -65,6 +65,18 @@ int handle_srlv(uint32_t instr);
 int handle_srav(uint32_t instr);
 int handle_jr(uint32_t instr);
 int handle_jalr(uint32_t instr);
+
+int handle_syscall(uint32_t instr);
+
+int handle_mfhi(uint32_t instr);
+int handle_mthi(uint32_t instr);
+int handle_mflo(uint32_t instr);
+int handle_mtlo(uint32_t instr); 
+int handle_mult(uint32_t instr); 
+int handle_multu(uint32_t instr);
+int handle_div(uint32_t instr);
+int handle_divu(uint32_t instr); 
+
 int handle_add(uint32_t instr);
 int handle_addu(uint32_t instr);
 int handle_sub(uint32_t instr);
@@ -73,6 +85,8 @@ int handle_and(uint32_t instr);
 int handle_or(uint32_t instr);
 int handle_xor(uint32_t instr);
 int handle_nor(uint32_t instr);
+int handle_slt(uint32_t instr);
+int handle_sltu(uint32_t instr); 
 
 int handle_bltz(uint32_t instr); 
 int handle_bgez(uint32_t instr); 
@@ -848,6 +862,212 @@ int handle_jalr(uint32_t instr) {
 }
 
 /*
+ * handle_syscall
+ * System Call
+ * Function: 12
+ */
+int handle_syscall(uint32_t instr) {
+	if (CURRENT_STATE.REGS[REG_SYSCALL] == 0x0000000A) {
+		// if syscall register has value 0x0A, halt 
+		// otherwise, instruction has no effect
+		RUN_BIT = 0; 
+	} 
+	
+	// increment program counter to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK; 
+}
+
+/*
+ * handle_mfhi
+ * Move From Hi
+ * Function: 16
+ */
+int handle_mfhi(uint32_t instr) {
+	// decode destination register 
+	int rd = decode_r_rd(instr);
+
+	// contents of special register HI loaded into destination register 
+	NEXT_STATE.REGS[rd] = CURRENT_STATE.HI;
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_mthi
+ * Move To Hi
+ * Function: 17
+ */
+int handle_mthi(uint32_t instr) {
+	// decode source register
+	int rs = decode_r_rs(instr);
+
+	// contents of source register loaded into special register HI 
+	NEXT_STATE.HI = CURRENT_STATE.REGS[rs];
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_mflo
+ * Move From Lo
+ * Function: 18
+ */
+int handle_mflo(uint32_t instr) {
+	// decode destination register 
+	int rd = decode_r_rd(instr);
+
+	// contents of special register LO loaded into destination register 
+	NEXT_STATE.REGS[rd] = CURRENT_STATE.LO;
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_mtlo
+ * Move To Lo
+ * Function: 19
+ */
+int handle_mtlo(uint32_t instr) {
+	// decode source register
+	int rs = decode_r_rs(instr);
+
+	// contents of source register loaded into special register LO 
+	NEXT_STATE.LO = CURRENT_STATE.REGS[rs];
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_mult
+ * Multiply
+ * Function: 24
+ */
+int handle_mult(uint32_t instr) {
+	// decode source register and target register
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+
+	// treat both quantities as 32-bit signed values 
+	int64_t source = (int64_t) CURRENT_STATE.REGS[rs];
+	int64_t target = (int64_t) CURRENT_STATE.REGS[rt];
+
+	// contents of source register multiplied by contents of target register 
+	int64_t result = source * target;
+
+	// high word of result stored in special register HI
+	NEXT_STATE.HI = (result >> 32) & 0xFFFFFFFF;
+
+	// low word of result stored in special register LO 
+	NEXT_STATE.LO = (result >> 0)  & 0xFFFFFFFF; 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_multu
+ * Multiply Unsigned
+ * Function: 25
+ */
+int handle_multu(uint32_t instr) {
+	// decode source register and target register
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+
+	// treat both quantities as 32-bit unsigned values 
+	uint64_t source = (uint64_t) CURRENT_STATE.REGS[rs];
+	uint64_t target = (uint64_t) CURRENT_STATE.REGS[rt];
+
+	// contents of source register multiplied by contents of target register 
+	uint64_t result = source * target;
+
+	// high word of result stored in special register HI
+	NEXT_STATE.HI = (result >> 32) & 0xFFFFFFFF;
+
+	// low word of result stored in special register LO 
+	NEXT_STATE.LO = (result >> 0)  & 0xFFFFFFFF; 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_div
+ * Divide
+ * Function: 26
+ */
+int handle_div(uint32_t instr) {
+	// decode source register and target register
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+
+	// treat both quantities as 32-bit signed values 
+	int64_t source = (int64_t) CURRENT_STATE.REGS[rs];
+	int64_t target = (int64_t) CURRENT_STATE.REGS[rt];
+
+	// contents of source register divided by contents of target register 
+	int64_t result = source / target;
+
+	// high word of result stored in special register HI
+	NEXT_STATE.HI = (result >> 32) & 0xFFFFFFFF;
+
+	// low word of result stored in special register LO 
+	NEXT_STATE.LO = (result >> 0)  & 0xFFFFFFFF; 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_divu
+ * Divide Unsigned
+ * Function: 27
+ */
+int handle_divu(uint32_t instr) {
+	// decode source register and target register
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+
+	// treat both quantities as 32-bit unsigned values 
+	uint64_t source = (uint64_t) CURRENT_STATE.REGS[rs];
+	uint64_t target = (uint64_t) CURRENT_STATE.REGS[rt];
+
+	// contents of source register divided by contents of target register 
+	uint64_t result = source / target;
+
+	// high word of result stored in special register HI
+	NEXT_STATE.HI = (result >> 32) & 0xFFFFFFFF;
+
+	// low word of result stored in special register LO 
+	NEXT_STATE.LO = (result >> 0)  & 0xFFFFFFFF; 
+
+	// update the program counter to point to next sequential instr
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
  * handle_add
  * Add 
  * Function: 32
@@ -1024,6 +1244,64 @@ int handle_nor(uint32_t instr) {
 
 	return STATUS_OK;
 }
+ 
+/*
+ * handle_slt
+ * Set On Less Than
+ * Function: 42
+ */
+int handle_slt(uint32_t instr) {
+	// decode source, target, and destination registers
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// consider both register contents as signed integers
+	int32_t source = (int32_t) CURRENT_STATE.REGS[rs];
+	int32_t target = (int32_t) CURRENT_STATE.REGS[rt];
+
+	if (source < target) {
+		// if contents of source less than contents of target, result set to 1
+		NEXT_STATE.REGS[rd] = 1;
+	} else {
+		// otherwise, result set to 0
+		NEXT_STATE.REGS[rd] = 0; 
+	}
+
+	// update the program counter to point to next sequential instr 
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
+
+/*
+ * handle_sltu
+ * Set On Less Than Unsigned 
+ * Function: 43
+ */
+int handle_sltu(uint32_t instr) {
+	// decode source, target, and destination registers
+	int rs = decode_r_rs(instr);
+	int rt = decode_r_rt(instr);
+	int rd = decode_r_rd(instr);
+
+	// consider both register contents as unsigned integers
+	uint32_t source = (uint32_t) CURRENT_STATE.REGS[rs];
+	uint32_t target = (uint32_t) CURRENT_STATE.REGS[rt];
+
+	if (source < target) {
+		// if contents of source less than contents of target, result set to 1
+		NEXT_STATE.REGS[rd] = 1;
+	} else {
+		// otherwise, result set to 0
+		NEXT_STATE.REGS[rd] = 0; 
+	}
+
+	// update the program counter to point to next sequential instr 
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+
+	return STATUS_OK;
+}
 
 /* ----------------------------------------------------------------------------
 	Instruction Handlers, by Target (Register-Immediate Instructions)
@@ -1174,30 +1452,30 @@ void init_opcode_dispatch(void) {
 		OPCODE_DISPATCH[i] = handle_unrecognized_opcode;
 	}
 
-	// setup individual handlers for recognized instructions
-	OPCODE_DISPATCH[OPCODE_J] = handle_j; 
-	OPCODE_DISPATCH[OPCODE_JAL] = handle_jal; 
-	OPCODE_DISPATCH[OPCODE_BEQ] = handle_beq; 
-	OPCODE_DISPATCH[OPCODE_BNE] = handle_bne; 
-	OPCODE_DISPATCH[OPCODE_BLEZ] = handle_blez; 
-	OPCODE_DISPATCH[OPCODE_BGTZ] = handle_bgtz;
-	OPCODE_DISPATCH[OPCODE_ADDI] = handle_addi;
+	// instruction handlers, in increasing order of opcode value
+	OPCODE_DISPATCH[OPCODE_J]     = handle_j; 
+	OPCODE_DISPATCH[OPCODE_JAL]   = handle_jal; 
+	OPCODE_DISPATCH[OPCODE_BEQ]   = handle_beq; 
+	OPCODE_DISPATCH[OPCODE_BNE]   = handle_bne; 
+	OPCODE_DISPATCH[OPCODE_BLEZ]  = handle_blez; 
+	OPCODE_DISPATCH[OPCODE_BGTZ]  = handle_bgtz;
+	OPCODE_DISPATCH[OPCODE_ADDI]  = handle_addi;
 	OPCODE_DISPATCH[OPCODE_ADDIU] = handle_addiu;
-	OPCODE_DISPATCH[OPCODE_SLTI] = handle_slti;
+	OPCODE_DISPATCH[OPCODE_SLTI]  = handle_slti;
 	OPCODE_DISPATCH[OPCODE_SLTIU] = handle_sltiu;
-	OPCODE_DISPATCH[OPCODE_ANDI] = handle_andi;
-	OPCODE_DISPATCH[OPCODE_ORI] = handle_ori; 
-	OPCODE_DISPATCH[OPCODE_XORI] = handle_xori;
-	OPCODE_DISPATCH[OPCODE_LUI] = handle_lui;
-	OPCODE_DISPATCH[OPCODE_LB] = handle_lb;
-	OPCODE_DISPATCH[OPCODE_LH] = handle_lh;
-	OPCODE_DISPATCH[OPCODE_LW] = handle_lw;
-	OPCODE_DISPATCH[OPCODE_LBU] = handle_lbu; 
-	OPCODE_DISPATCH[OPCODE_LW] = handle_lw; 
-	OPCODE_DISPATCH[OPCODE_LHU] = handle_lhu;
-	OPCODE_DISPATCH[OPCODE_SB] = handle_sb;
-	OPCODE_DISPATCH[OPCODE_SH] = handle_sh;
-	OPCODE_DISPATCH[OPCODE_SW] = handle_sw;
+	OPCODE_DISPATCH[OPCODE_ANDI]  = handle_andi;
+	OPCODE_DISPATCH[OPCODE_ORI]   = handle_ori; 
+	OPCODE_DISPATCH[OPCODE_XORI]  = handle_xori;
+	OPCODE_DISPATCH[OPCODE_LUI]   = handle_lui;
+	OPCODE_DISPATCH[OPCODE_LB]    = handle_lb;
+	OPCODE_DISPATCH[OPCODE_LH]    = handle_lh;
+	OPCODE_DISPATCH[OPCODE_LW]    = handle_lw;
+	OPCODE_DISPATCH[OPCODE_LBU]   = handle_lbu; 
+	OPCODE_DISPATCH[OPCODE_LW]    = handle_lw; 
+	OPCODE_DISPATCH[OPCODE_LHU]   = handle_lhu;
+	OPCODE_DISPATCH[OPCODE_SB]    = handle_sb;
+	OPCODE_DISPATCH[OPCODE_SH]    = handle_sh;
+	OPCODE_DISPATCH[OPCODE_SW]    = handle_sw;
 }
 
 void init_function_dispatch(void) {
@@ -1209,22 +1487,34 @@ void init_function_dispatch(void) {
 		FUNCTION_DISPATCH[i] = handle_unrecognized_function;
 	}
 
-	FUNCTION_DISPATCH[FUNC_SLL] = handle_sll; 
-	FUNCTION_DISPATCH[FUNC_SRL] = handle_srl;
-	FUNCTION_DISPATCH[FUNC_SRA] = handle_sra;
-	FUNCTION_DISPATCH[FUNC_SLLV] = handle_sllv; 
-	FUNCTION_DISPATCH[FUNC_SRLV] = handle_srlv;
-	FUNCTION_DISPATCH[FUNC_SRAV] = handle_srav;
-	FUNCTION_DISPATCH[FUNC_JR] = handle_jr;
-	FUNCTION_DISPATCH[FUNC_JALR] = handle_jalr;
-	FUNCTION_DISPATCH[FUNC_ADD] = handle_add; 
-	FUNCTION_DISPATCH[FUNC_ADDU] = handle_addu;
-	FUNCTION_DISPATCH[FUNC_SUB] = handle_sub;
-	FUNCTION_DISPATCH[FUNC_SUBU] = handle_subu;
-	FUNCTION_DISPATCH[FUNC_AND] = handle_and;
-	FUNCTION_DISPATCH[FUNC_OR] = handle_or; 
-	FUNCTION_DISPATCH[FUNC_XOR] = handle_xor;
-	FUNCTION_DISPATCH[FUNC_NOR] = handle_nor; 
+	// instruction handlers, in increasing order of function code value
+	FUNCTION_DISPATCH[FUNC_SLL]     = handle_sll; 
+	FUNCTION_DISPATCH[FUNC_SRL]     = handle_srl;
+	FUNCTION_DISPATCH[FUNC_SRA]     = handle_sra;
+	FUNCTION_DISPATCH[FUNC_SLLV]    = handle_sllv; 
+	FUNCTION_DISPATCH[FUNC_SRLV]    = handle_srlv;
+	FUNCTION_DISPATCH[FUNC_SRAV]    = handle_srav;
+	FUNCTION_DISPATCH[FUNC_JR]      = handle_jr;
+	FUNCTION_DISPATCH[FUNC_JALR]    = handle_jalr;
+	FUNCTION_DISPATCH[FUNC_SYSCALL] = handle_syscall; 
+	FUNCTION_DISPATCH[FUNC_MFHI]    = handle_mfhi;
+	FUNCTION_DISPATCH[FUNC_MTHI]    = handle_mthi;
+	FUNCTION_DISPATCH[FUNC_MFLO]    = handle_mflo;
+	FUNCTION_DISPATCH[FUNC_MTLO]    = handle_mtlo;
+	FUNCTION_DISPATCH[FUNC_MULT]    = handle_mult; 
+	FUNCTION_DISPATCH[FUNC_MULTU]   = handle_multu; 
+	FUNCTION_DISPATCH[FUNC_DIV]     = handle_div;
+	FUNCTION_DISPATCH[FUNC_DIVU]    = handle_divu;
+	FUNCTION_DISPATCH[FUNC_ADD]     = handle_add; 
+	FUNCTION_DISPATCH[FUNC_ADDU]    = handle_addu;
+	FUNCTION_DISPATCH[FUNC_SUB]     = handle_sub;
+	FUNCTION_DISPATCH[FUNC_SUBU]    = handle_subu;
+	FUNCTION_DISPATCH[FUNC_AND]     = handle_and;
+	FUNCTION_DISPATCH[FUNC_OR]      = handle_or; 
+	FUNCTION_DISPATCH[FUNC_XOR]     = handle_xor;
+	FUNCTION_DISPATCH[FUNC_NOR]     = handle_nor; 
+	FUNCTION_DISPATCH[FUNC_SLT]     = handle_slt;
+	FUNCTION_DISPATCH[FUNC_SLTU]    = handle_sltu;
 }
 
 void init_target_dispatch(void) {
@@ -1236,8 +1526,9 @@ void init_target_dispatch(void) {
 		TARGET_DISPATCH[i] = handle_unrecognized_target;
 	}
 
-	TARGET_DISPATCH[TARGET_BLTZ] = handle_bltz; 
-	TARGET_DISPATCH[TARGET_BGEZ] = handle_bgez;
+	// instruction handlers, in increasing order of target code value
+	TARGET_DISPATCH[TARGET_BLTZ]   = handle_bltz; 
+	TARGET_DISPATCH[TARGET_BGEZ]   = handle_bgez;
 	TARGET_DISPATCH[TARGET_BLTZAL] = handle_bltzal;
 	TARGET_DISPATCH[TARGET_BGEZAL] = handle_bgezal;
 }
