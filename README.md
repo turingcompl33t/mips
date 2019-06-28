@@ -1,10 +1,4 @@
-## Instruction-Level MIPS Simulator 
-
-Kyle Dotterrer
-
-January, 2019
-
-### Overview
+### Instruction-Level MIPS Simulator 
 
 An instruction-level simulator of a single-cycle processor implementing the MIPS ISA. 
 
